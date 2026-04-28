@@ -4,17 +4,31 @@
     <title>Battery Monitor</title>
     <style>
         body { font-family: sans-serif; text-align: center; margin-top: 50px; background: #f4f4f4; }
-        .card { background: white; padding: 20px; border-radius: 10px; display: inline-block; shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        h1 { color: #333; }
-        #voltage { font-size: 48px; color: #27ae60; font-weight: bold; }
+        .card { background: white; padding: 20px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .data-box { margin: 15px 0; }
+        .value { font-size: 32px; color: #27ae60; font-weight: bold; }
+        .label { font-size: 14px; color: #777; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h1>Battery Voltage</h1>
-        <div id="voltage">Connecting...</div>
-        <p id="status">Waiting for Firebase...</p>
+        <h1>Battery Status</h1>
+        
+        <div class="data-box">
+            <div class="label">Voltage</div>
+            <div id="voltage" class="value">-- V</div>
+        </div>
+        <div class="data-box">
+            <div class="label">Current</div>
+            <div id="current" class="value">-- A</div>
+        </div>
+        <div class="data-box">
+            <div class="label">Temperature</div>
+            <div id="temperature" class="value">-- °C</div>
+        </div>
+        
+        <p id="status">Connecting...</p>
     </div>
 
     <script type="module">
@@ -33,16 +47,19 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const batteryRef = ref(db, 'battery/voltage');
+
+        // Listen for all battery data at once
+        const batteryRef = ref(db, 'battery');
 
         onValue(batteryRef, (snapshot) => {
             const data = snapshot.val();
-            if (data !== null) {
-                document.getElementById("voltage").innerText = data + " V";
+            if (data) {
+                document.getElementById("voltage").innerText = (data.voltage || 0) + " V";
+                document.getElementById("current").innerText = (data.current || 0) + " A";
+                document.getElementById("temperature").innerText = (data.temperature || 0) + " °C";
                 document.getElementById("status").innerText = "Live Data";
             } else {
-                document.getElementById("voltage").innerText = "--";
-                document.getElementById("status").innerText = "No data in database yet";
+                document.getElementById("status").innerText = "No data available";
             }
         }, (error) => {
             document.getElementById("status").innerText = "Error: " + error.message;
